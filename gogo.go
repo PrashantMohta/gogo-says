@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/PrashantMohta/gogo-says/controllers"
@@ -10,23 +9,24 @@ import (
 )
 
 func main() {
-	foo := models.Quote{ID: 1, Value: "crime master gogo"}
-	models.AddQuote(foo)
-	models.AddQuote(models.Quote{ID: 2, Value: "crime master gogo"})
-	models.AddQuote(models.Quote{ID: 3, Value: "crime master gogo"})
 
-	quotes, err := models.GetQuotes()
-	if err == nil {
-		for _, v := range quotes {
-			fmt.Println(*v)
+	models.AddQuote(models.Quote{ID: 0, Value: "Teja! yeh kaise aadmi tune paal rakhe hain, saale suit to 10–10 hazaar ka pehente hain, lekin akal 10 paise ki bhi nahi hai"})
+	models.AddQuote(models.Quote{ID: 1, Value: "Crime Master Gogo naam hai mera! Ankhen nikal ke gotiyaan kheltaan hoon."})
+	models.AddQuote(models.Quote{ID: 2, Value: "Aayan hoon, kuch to le ke jaoonga! Khandani chor hoon, Mogambo ka bhateeja"})
+	/*
+		quotes, err := models.GetQuotes()
+		if err == nil {
+			for _, v := range quotes {
+				fmt.Println(*v)
+			}
+			fmt.Println(quotes)
 		}
-		fmt.Println(quotes)
-	}
 
-	quote1, err := models.GetQuoteByID(1)
-	if err == nil {
-		fmt.Println(*quote1)
-	}
+		quote1, err := models.GetQuoteByID(1)
+		if err == nil {
+			fmt.Println(*quote1)
+		}
+	*/
 
 	controllers.RegisterControllers()
 

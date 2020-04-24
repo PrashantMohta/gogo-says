@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 //Quote struct
 type Quote struct {
@@ -9,10 +11,12 @@ type Quote struct {
 }
 
 var quoteMap = make(map[int]*Quote)
+var MaxIDs = 0
 
 //AddQuote will add a quote to the map
 func AddQuote(q Quote) error {
 	quoteMap[q.ID] = &q
+	MaxIDs++
 	return nil
 }
 
