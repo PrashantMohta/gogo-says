@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/PrashantMohta/gogo-says/controllers"
@@ -8,11 +10,23 @@ import (
 	"github.com/PrashantMohta/gogo-says/models"
 )
 
-func main() {
+func initialiseMap() {
+	resp, err := http.Get("https://raw.githubusercontent.com/PrashantMohta/gogo-says/master/data/gogo.json")
+	var quotes = []models.Quote{}
+	if err == nil {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err == nil {
+			json.Unmarshal(body, &quotes)
+		}
+	}
+	for _, v := range quotes {
+		models.AddQuote(v)
+	}
+}
 
-	models.AddQuote(models.Quote{ID: 0, Value: "Teja! yeh kaise aadmi tune paal rakhe hain, saale suit to 10–10 hazaar ka pehente hain, lekin akal 10 paise ki bhi nahi hai"})
-	models.AddQuote(models.Quote{ID: 1, Value: "Crime Master Gogo naam hai mera! Ankhen nikal ke gotiyaan kheltaan hoon."})
-	models.AddQuote(models.Quote{ID: 2, Value: "Aayan hoon, kuch to le ke jaoonga! Khandani chor hoon, Mogambo ka bhateeja"})
+func main() {
+	initialiseMap()
 	/*
 		quotes, err := models.GetQuotes()
 		if err == nil {
@@ -29,6 +43,5 @@ func main() {
 	*/
 
 	controllers.RegisterControllers()
-
 	http.ListenAndServe(":3000", nil)
 }
