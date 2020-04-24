@@ -11,6 +11,8 @@ type Quote struct {
 }
 
 var quoteMap = make(map[int]*Quote)
+
+//MaxIDs denotes the number of IDs currently in the system , as IDs for us are incremental and without any gaps this is enough
 var MaxIDs = 0
 
 //AddQuote will add a quote to the map
