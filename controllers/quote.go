@@ -3,6 +3,7 @@ package controllers
 import (
 	rand "math/rand"
 	"net/http"
+	"sync"
 
 	"github.com/PrashantMohta/gogo-says/models"
 )
@@ -28,24 +29,31 @@ func produceQuoteWords(words chan<- string) {
 }
 
 //combine Words To Make Gibberish Sentences
-func combineWords(sentence *string, words <-chan string, completion chan<- bool) {
+func combineWords(sentence *string, mutex *sync.Mutex, words <-chan string, await *sync.WaitGroup) {
 	// consumer
 	for word := range words {
+		mutex.Lock()
 		*sentence += word + " "
+		mutex.Unlock()
 	}
 
-	completion <- true
+	await.Done()
 }
 
 func getSyntheticQuote() string {
 	jobs := make(chan string)
-	done := make(chan bool)
+	mutex := sync.Mutex{}
+	await := sync.WaitGroup{}
 
 	var sentence string
 	go produceQuoteWords(jobs)
-	go combineWords(&sentence, jobs, done)
 
-	<-done
+	for i := 0; i < 3; i++ {
+		await.Add(1)
+		go combineWords(&sentence, &mutex, jobs, &await)
+	}
+
+	await.Wait()
 	return sentence
 }
 
