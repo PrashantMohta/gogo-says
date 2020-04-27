@@ -20,12 +20,13 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 	}
 }
 
-func produceQuoteWords(words chan<- string) {
+func produceQuoteWords(words chan<- string, await *sync.WaitGroup) {
 	// producer
 	for _, v := range []string{"1", "2", "3"} {
 		words <- "string " + v
 	}
-	close(words)
+
+	await.Done()
 }
 
 //combine Words To Make Gibberish Sentences
@@ -43,17 +44,23 @@ func combineWords(sentence *string, mutex *sync.Mutex, words <-chan string, awai
 func getSyntheticQuote() string {
 	jobs := make(chan string)
 	mutex := sync.Mutex{}
-	await := sync.WaitGroup{}
+	consumerWait := sync.WaitGroup{}
+	producerWait := sync.WaitGroup{}
 
 	var sentence string
-	go produceQuoteWords(jobs)
-
 	for i := 0; i < 3; i++ {
-		await.Add(1)
-		go combineWords(&sentence, &mutex, jobs, &await)
+		producerWait.Add(1)
+		go produceQuoteWords(jobs, &producerWait)
+	}
+	for i := 0; i < 3; i++ {
+		consumerWait.Add(1)
+		go combineWords(&sentence, &mutex, jobs, &consumerWait)
 	}
 
-	await.Wait()
+	producerWait.Wait()
+	close(jobs)
+	consumerWait.Wait()
+
 	return sentence
 }
 
