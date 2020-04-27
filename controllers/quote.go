@@ -4,6 +4,7 @@ import (
 	"fmt"
 	rand "math/rand"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/PrashantMohta/gogo-says/models"
@@ -33,10 +34,13 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 
 func produceQuoteWords(words chan<- string, await *sync.WaitGroup) {
 	// producer
-	for _, v := range []string{"1", "2", "3"} {
-		words <- "string " + v
+	if quote, ok := getRandomQuote(); ok {
+		quoteSlice := strings.Split(quote, " ")
+		for i := 0; i < 3; i++ {
+			word := rand.Intn(len(quoteSlice))
+			words <- quoteSlice[word]
+		}
 	}
-
 	await.Done()
 }
 
