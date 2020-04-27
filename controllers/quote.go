@@ -3,7 +3,6 @@ package controllers
 import (
 	rand "math/rand"
 	"net/http"
-	"time"
 
 	"github.com/PrashantMohta/gogo-says/models"
 )
@@ -22,20 +21,29 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 
 func getSyntheticQuote() string {
 	jobs := make(chan string)
+	done := make(chan bool)
+
 	var sentence string
 	go (func(jobs chan<- string) {
 		// producer
 		for _, v := range []string{"1", "2", "3"} {
 			jobs <- "string " + v
 		}
+
+		close(jobs)
+
 	})(jobs)
-	go (func(jobs <-chan string) {
+
+	go (func(jobs <-chan string, completion chan<- bool) {
 		// consumer
 		for word := range jobs {
 			sentence += word + " "
 		}
-	})(jobs)
-	time.Sleep(500 * time.Millisecond)
+
+		completion <- true
+	})(jobs, done)
+
+	<-done
 	return sentence
 }
 
