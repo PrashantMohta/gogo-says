@@ -19,29 +19,31 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 	}
 }
 
+func produceQuoteWords(words chan<- string) {
+	// producer
+	for _, v := range []string{"1", "2", "3"} {
+		words <- "string " + v
+	}
+	close(words)
+}
+
+//combine Words To Make Gibberish Sentences
+func combineWords(sentence *string, words <-chan string, completion chan<- bool) {
+	// consumer
+	for word := range words {
+		*sentence += word + " "
+	}
+
+	completion <- true
+}
+
 func getSyntheticQuote() string {
 	jobs := make(chan string)
 	done := make(chan bool)
 
 	var sentence string
-	go (func(jobs chan<- string) {
-		// producer
-		for _, v := range []string{"1", "2", "3"} {
-			jobs <- "string " + v
-		}
-
-		close(jobs)
-
-	})(jobs)
-
-	go (func(jobs <-chan string, completion chan<- bool) {
-		// consumer
-		for word := range jobs {
-			sentence += word + " "
-		}
-
-		completion <- true
-	})(jobs, done)
+	go produceQuoteWords(jobs)
+	go combineWords(&sentence, jobs, done)
 
 	<-done
 	return sentence
