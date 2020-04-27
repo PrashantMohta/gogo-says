@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	rand "math/rand"
 	"net/http"
 	"sync"
@@ -13,10 +14,20 @@ type QuoteController struct{}
 func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	println((*request.URL).Path)
 	path := request.URL.Path
+	var out string
+	var ok bool
+
 	if path == "/gogo-says" {
-		response.Write([]byte(getRandomQuote()))
+		out, ok = getRandomQuote()
 	} else if path == "/gogo-pc" {
-		response.Write([]byte(getSyntheticQuote()))
+		out, ok = getSyntheticQuote()
+	}
+
+	if ok {
+		response.Write([]byte(out))
+	} else {
+		fmt.Println(out)
+		response.Write([]byte("Something went wrong, try again later"))
 	}
 }
 
@@ -41,13 +52,14 @@ func combineWords(sentence *string, mutex *sync.Mutex, words <-chan string, awai
 	await.Done()
 }
 
-func getSyntheticQuote() string {
+func getSyntheticQuote() (string, bool) {
 	jobs := make(chan string)
 	mutex := sync.Mutex{}
 	consumerWait := sync.WaitGroup{}
 	producerWait := sync.WaitGroup{}
 
 	var sentence string
+
 	for i := 0; i < 3; i++ {
 		producerWait.Add(1)
 		go produceQuoteWords(jobs, &producerWait)
@@ -61,26 +73,26 @@ func getSyntheticQuote() string {
 	close(jobs)
 	consumerWait.Wait()
 
-	return sentence
+	if len(sentence) > 0 {
+		return sentence, true
+	}
+	return "Something bad happened", false
 }
 
-func getRandomQuote() string {
+func getRandomQuote() (string, bool) {
 	if models.MaxIDs > 0 {
 		randomID := rand.Intn(models.MaxIDs)
 		quote, err := models.GetQuoteByID(randomID)
 		if err == nil && quote != nil {
 			quoteAsString := quote.Value
 			if len(quoteAsString) > 0 {
-				return quoteAsString
-			} else {
-				return "Empty Quote"
+				return quoteAsString, true
 			}
-		} else {
-			return "Some Error Occurred"
+			return "Empty Quote", false
 		}
-	} else {
-		return "No Quotes Present"
+		return "Some Error Occurred", false
 	}
+	return "No Quotes Present", false
 }
 
 func newQuoteController() *QuoteController {
