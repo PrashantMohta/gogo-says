@@ -3,7 +3,7 @@ package controllers
 import (
 	rand "math/rand"
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/PrashantMohta/gogo-says/models"
 )
@@ -11,23 +11,50 @@ import (
 type QuoteController struct{}
 
 func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	//println((*request.URL).Path)
+	println((*request.URL).Path)
+	path := request.URL.Path
+	if path == "/gogo-says" {
+		response.Write([]byte(getRandomQuote()))
+	} else if path == "/gogo-pc" {
+		response.Write([]byte(getSyntheticQuote()))
+	}
+}
+
+func getSyntheticQuote() string {
+	jobs := make(chan string)
+	var sentence string
+	go (func(jobs chan<- string) {
+		// producer
+		for _, v := range []string{"1", "2", "3"} {
+			jobs <- "string " + v
+		}
+	})(jobs)
+	go (func(jobs <-chan string) {
+		// consumer
+		for word := range jobs {
+			sentence += word + " "
+		}
+	})(jobs)
+	time.Sleep(500 * time.Millisecond)
+	return sentence
+}
+
+func getRandomQuote() string {
 	if models.MaxIDs > 0 {
 		randomID := rand.Intn(models.MaxIDs)
-		response.Write([]byte(strconv.Itoa(randomID)))
 		quote, err := models.GetQuoteByID(randomID)
 		if err == nil && quote != nil {
 			quoteAsString := quote.Value
 			if len(quoteAsString) > 0 {
-				response.Write([]byte(quoteAsString))
+				return quoteAsString
 			} else {
-				response.Write([]byte("Empty Quote"))
+				return "Empty Quote"
 			}
 		} else {
-			response.Write([]byte("Some Error Occurred"))
+			return "Some Error Occurred"
 		}
 	} else {
-		response.Write([]byte("No Quotes Present"))
+		return "No Quotes Present"
 	}
 }
 
