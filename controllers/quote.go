@@ -17,8 +17,12 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 	path := request.URL.Path
 	var out string
 	var ok bool
-
-	if path == "/gogo-says" {
+	response.Header().Set("Content-Type", "text/html")
+	response.Write([]byte(`<h2>Welcome to Go Introduction project on Crime Master Gogo</h2> <hr/>`))
+	if path == "/" {
+		out = `<a href='/gogo-says'>Get a Random GoGo quote</a> <br/> <a href='/gogo-pc'>Get a Synthetic GoGo quote</a> `
+		ok = true
+	} else if path == "/gogo-says" {
 		out, ok = getRandomQuote()
 	} else if path == "/gogo-pc" {
 		out, ok = getSyntheticQuote()
@@ -30,6 +34,7 @@ func (qc QuoteController) ServeHTTP(response http.ResponseWriter, request *http.
 		fmt.Println(out)
 		response.Write([]byte("Something went wrong, try again later"))
 	}
+	response.Write([]byte(`<hr/> <a href="` + path + `">Reload</a>`))
 }
 
 func produceQuoteWords(words chan<- string, await *sync.WaitGroup) {

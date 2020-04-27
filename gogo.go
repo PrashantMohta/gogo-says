@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/PrashantMohta/gogo-says/controllers"
 
@@ -26,22 +28,15 @@ func initialiseMap() {
 }
 
 func main() {
+	port := 3000
+
+	fmt.Println("Getting Json from Repo...")
 	initialiseMap()
-	/*
-		quotes, err := models.GetQuotes()
-		if err == nil {
-			for _, v := range quotes {
-				fmt.Println(*v)
-			}
-			fmt.Println(quotes)
-		}
 
-		quote1, err := models.GetQuoteByID(1)
-		if err == nil {
-			fmt.Println(*quote1)
-		}
-	*/
-
+	fmt.Println("Registering Controller...")
 	controllers.RegisterControllers()
-	http.ListenAndServe(":3000", nil)
+
+	fmt.Println("Starting Server at http://localhost:" + strconv.Itoa(port) + "/")
+	http.ListenAndServe(":"+strconv.Itoa(port), nil)
+
 }

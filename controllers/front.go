@@ -7,6 +7,4 @@ import (
 func RegisterControllers() {
 	qc := newQuoteController()
 	http.Handle("/", *qc)
-	http.Handle("/gogo-says", *qc)
-	http.Handle("/gogo-says/", *qc)
 }
